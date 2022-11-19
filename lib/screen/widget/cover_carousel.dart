@@ -20,7 +20,7 @@ class _CoverCarouselWidgetState extends State<_CoverCarouselWidget> {
   }
 
   void _loadMovies() async {
-    final movies = await _repository.getNotPlaying();
+    final movies = await _repository.getNowPlaying();
 
     setState(() {
       _movies = movies.results;
