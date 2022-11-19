@@ -1,3 +1,4 @@
+import 'package:flutter_movie_list/api/properties/api_key.dart';
 import 'package:http/http.dart' as http;
 
 abstract class ApiProvider {
@@ -18,7 +19,7 @@ class ApiProviderImpl implements ApiProvider {
 
   final _host = 'api.themoviedb.org';
   final _apiVersion = 3;
-  final _apiKey = '';
+  final _apiKey = apiKey;
   final _language = 'ko-KR';
 
   @override
