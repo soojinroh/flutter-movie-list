@@ -8,55 +8,58 @@ class _CoverCarouselWidget extends StatefulWidget {
 }
 
 class _CoverCarouselWidgetState extends State<_CoverCarouselWidget> {
-  final MovieRepository _repository = MovieRepository(apiProvider: ApiProviderImpl());
-  List<Movie> _movies = [];
+  late MoviesBloc bloc;
   int _currentIndex = 0;
 
   @override
   void initState() {
     super.initState();
-
-    _loadMovies();
-  }
-
-  void _loadMovies() async {
-    final movies = await _repository.getNowPlaying();
-
-    setState(() {
-      _movies = movies.results;
-    });
+    bloc = MoviesBloc();
+    bloc.getNowPlayingMovies();
   }
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      height: 340,
-      child: Stack(
-        children: [
-          PageView.builder(
-            scrollDirection: Axis.horizontal,
-            itemCount: _movies.length,
-            itemBuilder: (context, index) {
-              return _CarouselTile(
-                movie: _movies[index],
-              );
-            },
-            onPageChanged: (index) {
-              setState(() {
-                _currentIndex = index;
-              });
-            },
-          ),
-          Positioned(
-            left: 20,
-            bottom: 5,
-            child: _CarouselIndicator(
-              totalCount: _movies.length,
-              currentIndex: _currentIndex,
+    return StreamBuilder<MovieList>(
+      stream: bloc.movieBloc.stream,
+      builder: (context, snapshot) {
+        if (snapshot.hasData) {
+          return SizedBox(
+            height: 340,
+            child: Stack(
+              children: [
+                PageView.builder(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: snapshot.data!.totalResults,
+                  itemBuilder: (context, index) {
+                    return _CarouselTile(
+                      movie: snapshot.data!.results[index],
+                    );
+                  },
+                  onPageChanged: (index) {
+                    setState(() {
+                      _currentIndex = index;
+                    });
+                  },
+                ),
+                Positioned(
+                  left: 20,
+                  bottom: 5,
+                  child: _CarouselIndicator(
+                    totalCount: snapshot.data!.totalResults,
+                    currentIndex: _currentIndex,
+                  ),
+                ),
+              ],
             ),
-          ),
-        ],
-      ),
+          );
+        } else {
+          return SizedBox(
+            height: 340,
+            child: Container(),
+          );
+        }
+      }
     );
   }
 }
