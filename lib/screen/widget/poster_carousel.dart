@@ -31,33 +31,19 @@ class _PosterCarouselWidget extends StatefulWidget {
 }
 
 class _PosterCarouselWidgetState extends State<_PosterCarouselWidget> {
-  final MovieRepository _repository = MovieRepository(apiProvider: ApiProviderImpl());
-  List<Movie> _movies = [];
+  late MoviesBloc bloc;
 
   @override
   void initState() {
     super.initState();
 
-    _loadMovies();
-  }
-
-  void _loadMovies() async {
-    late List<Movie> movies;
-
-    if (widget.type == PosterType.popular) {
-      final result = await _repository.getPopular();
-      movies = result.results;
-    } else if (widget.type == PosterType.upcoming) {
-      final result = await _repository.getUpcoming();
-      movies = result.results;
-    } else {
-      //do nothing
-      movies = [];
+    bloc = MoviesBloc();
+    if (widget.type == PosterType.upcoming) {
+      bloc.getUpcomingMovies();
     }
-
-    setState(() {
-      _movies = movies;
-    });
+    if (widget.type == PosterType.popular) {
+      bloc.getPopularMovies();
+    }
   }
 
   @override
@@ -83,28 +69,37 @@ class _PosterCarouselWidgetState extends State<_PosterCarouselWidget> {
           constraints: BoxConstraints(
             maxHeight: 300,
           ),
-          child: ListView.separated(
-            scrollDirection: Axis.horizontal,
-            itemCount: _movies.length,
-            itemBuilder: (context, index) {
-              if (index == 0) {
-                return Padding(
-                  padding: const EdgeInsets.only(left: 20.0),
-                  child: _PosterTile(
-                    movie: _movies[index],
-                  ),
-                );
-              }
+          child: StreamBuilder<MovieList>(
+            stream: bloc.movieBloc.stream,
+            builder: (context, snapshot) {
+              if (snapshot.hasData) {
+                return ListView.separated(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: snapshot.data!.totalResults,
+                  itemBuilder: (context, index) {
+                    if (index == 0) {
+                      return Padding(
+                        padding: const EdgeInsets.only(left: 20.0),
+                        child: _PosterTile(
+                          movie: snapshot.data!.results[index],
+                        ),
+                      );
+                    }
 
-              return _PosterTile(
-                movie: _movies[index],
-              );
-            },
-            separatorBuilder: (context, index) {
-              return SizedBox(
-                width: 20,
-              );
-            },
+                    return _PosterTile(
+                      movie: snapshot.data!.results[index],
+                    );
+                  },
+                  separatorBuilder: (context, index) {
+                    return SizedBox(
+                      width: 20,
+                    );
+                  },
+                );
+              } else {
+                return Container();
+              }
+            }
           ),
         ),
       ],
